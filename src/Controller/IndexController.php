@@ -2,29 +2,47 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Response;
+use App\Service\TrackService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
-class IndexController extends Controller
+class IndexController extends AbstractController
 {
     /**
-    * @Route("/")
-    */
+     * @Route("/", name="index")
+     */
     public function indexAction()
     {
-        return new Response(
-            '<html><body>Hello world!</body></html>'
-        );
+        return $this->render('fixer/index.html.twig', []);
     }
 
     /**
-     * @Route("/get")
+     * @Route("/upload", name="upload_file")
+     * @param Request $request
+     * @param TrackService $trackService
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function fileAction()
+    public function uploadAction(Request $request, TrackService $trackService)
     {
-        // send the file contents and force the browser to download it
-        return $this->file('/path/to/some_file.pdf');
+        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+        $file = $request->files->get('track', false);
+
+        if(!$file) {
+            throw new BadRequestHttpException('Upload gpx file.');
+        }
+
+        if ($file->getClientOriginalExtension() !== 'gpx' && $file->getMimeType() !== 'text/xml') {
+            throw new BadRequestHttpException('Wrong file type. Only gpx allowed.');
+        }
+
+        $fixedTrack = $trackService->handleFile($file);
+
+        if(!$fixedTrack) {
+            throw new BadRequestHttpException('Something wrong.');
+        }
+
+        return $this->file($fixedTrack, 'Fixed_' . $file->getClientOriginalName());
     }
 }
