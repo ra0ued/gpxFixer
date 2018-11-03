@@ -12,9 +12,11 @@
         <h1>
             GPX Fixer
         </h1>
+
         <p>
             Чтобы исправитъ файл .GPX, который не открывается в программе, загрузите его сюда:
         </p>
+
         <form method="post" action="{{ path("upload_file") }}" enctype="multipart/form-data">
             <div class="input-group">
                 <div class="custom-file">
@@ -27,6 +29,12 @@
                 </div>
             </div>
         </form>
+
+        {% if errors %}
+            {% for message in errors %}
+                <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
     </div>
 
     <div class="jumbotron text-center" style="margin-bottom:0">
